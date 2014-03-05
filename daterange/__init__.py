@@ -63,6 +63,12 @@ StopIteration
 
 import datetime
 import re
+import sys
+
+# Support Python 3's simpler built-in types
+if sys.version > '3':
+    long = int
+    basestring = unicode = str
 
 
 def daterange(date, to=None, step=datetime.timedelta(days=1)):
