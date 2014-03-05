@@ -72,7 +72,10 @@ if sys.version > '3':
 
 
 def daterange(date, to=None, step=datetime.timedelta(days=1)):
+    return DateRange(date, to, step)
 
+
+class DateRange:
     """
     Similar to the built-in ``xrange()``, only for datetime objects.
 
@@ -98,32 +101,50 @@ def daterange(date, to=None, step=datetime.timedelta(days=1)):
     least a ‘days’ component; otherwise the same date will be yielded forever.
     """
 
-    if to is None:
-        condition = lambda d: True
-    else:
-        condition = lambda d: (d <= to)
+    def __init__(self, date, to=None, step=datetime.timedelta(days=1)):
+        self.date = date
 
-    if isinstance(step, (int, long)):
-        # By default, integers are interpreted in days. For more granular
-        # steps, use a `datetime.timedelta()` instance.
-        step = datetime.timedelta(days=step)
-    elif isinstance(step, basestring):
-        # If the string
-        if re.match(r'^(\d+)$', str(step)):
-            step = datetime.timedelta(days=int(step))
+        if to is None:
+            self.condition = lambda d: True
         else:
-            try:
-                step = delta(step)
-            except ValueError:
-                pass
+            self.condition = lambda d: (d <= to)
 
-    if not isinstance(step, datetime.timedelta):
-        raise TypeError('Invalid step value: %r' % (step,))
+        if isinstance(step, (int, long)):
+            # By default, integers are interpreted in days. For more granular
+            # steps, use a `datetime.timedelta()` instance.
+            step = datetime.timedelta(days=step)
+        elif isinstance(step, basestring):
+            # If the string
+            if re.match(r'^(\d+)$', str(step)):
+                step = datetime.timedelta(days=int(step))
+            else:
+                try:
+                    step = delta(step)
+                except ValueError:
+                    pass
 
-    # The main generation loop.
-    while condition(date):
-        yield date
-        date += step
+        if not isinstance(step, datetime.timedelta):
+            raise TypeError('Invalid step value: %r' % (step,))
+
+        self.step = step
+
+
+    def __iter__(self):
+        return self
+
+
+    def next(self):
+        if self.condition(self.date):
+            current_date = self.date
+            self.date += self.step
+            return current_date
+        else:
+            raise StopIteration()
+
+
+    # Python 3 compatibility
+    def __next__(self):
+        return self.next()
 
 
 class delta(object):
