@@ -103,6 +103,7 @@ class DateRange:
 
     def __init__(self, date, to=None, step=datetime.timedelta(days=1)):
         self.date = date
+        self.to = to
 
         if to is None:
             self.condition = lambda d: True
@@ -145,6 +146,46 @@ class DateRange:
     # Python 3 compatibility
     def __next__(self):
         return self.next()
+
+
+    def __contains__(self, item):
+        """
+        Test membership of ``item`` in date-range, using date boundaries.
+
+        >>> import datetime
+        >>> now = datetime.datetime.now()
+        >>> now_until_eternity = DateRange(now)
+
+        >>> tomorrow = (now + datetime.timedelta(1))
+        >>> tomorrow in now_until_eternity
+        True
+
+        >>> a_week_ago = (now - datetime.timedelta(7))
+        >>> a_week_ago in now_until_eternity
+        False
+
+        >>> a_week_today = (now + datetime.timedelta(7))
+        >>> a_week_today in now_until_eternity
+        True
+
+        >>> now_until_next_week = DateRange(now, now + datetime.timedelta(7))
+        >>> a_week_ago in now_until_next_week
+        False
+
+        >>> tomorrow in now_until_next_week
+        True
+
+        >>> a_week_today in now_until_next_week
+        False
+        """
+        if item >= self.date:
+            if self.to:
+                if item < self.to:
+                    return True
+            else:
+                return True
+
+        return False
 
 
 class delta(object):
