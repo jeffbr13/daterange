@@ -188,6 +188,12 @@ class DateRange:
         return False
 
 
+    def __repr__(self):
+        return 'DateRange({date}, to={to}, step={step})'.format(date=self.date,
+                                                                to=self.to,
+                                                                step=self.step)
+
+
 class delta(object):
 
     """
